@@ -1,0 +1,69 @@
+.matzek-hub .mh-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.matzek-hub .mh-header h3 {
+  margin: 0;
+}
+
+.matzek-hub .mh-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.matzek-hub .mh-info {
+  flex: 1 1 160px;
+  min-width: 140px;
+}
+
+.matzek-hub .mh-name {
+  font-weight: 600;
+}
+
+.matzek-hub .mh-repo {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+.matzek-hub .mh-versions {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  flex: 0 0 auto;
+}
+
+.matzek-hub .mh-status {
+  flex: 0 0 auto;
+  font-size: var(--font-ui-smaller);
+}
+
+.matzek-hub .mh-ok {
+  color: var(--color-green);
+}
+
+.matzek-hub .mh-update {
+  color: var(--color-orange);
+  font-weight: 600;
+}
+
+.matzek-hub .mh-error {
+  color: var(--color-red);
+}
+
+.matzek-hub .mh-note {
+  flex-basis: 100%;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
+
+.matzek-hub .mh-foot {
+  margin-top: 12px;
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+}
