@@ -56,6 +56,10 @@
   color: var(--color-red);
 }
 
+.plugin-depot .pd-muted {
+  color: var(--text-faint);
+}
+
 .plugin-depot .pd-note {
   flex-basis: 100%;
   font-size: var(--font-ui-smaller);

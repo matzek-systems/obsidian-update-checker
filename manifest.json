@@ -1,7 +1,7 @@
 {
   "id": "plugin-depot",
   "name": "Plugin Depot",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "minAppVersion": "1.5.0",
   "description": "Dashboard for plugins distributed outside the marketplace: installed vs latest GitHub release per plugin, one-button update via the GitHub CLI.",
   "author": "Matzek Systems",

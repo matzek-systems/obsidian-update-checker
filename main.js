@@ -46,6 +46,30 @@ const DEFAULT_REGISTRY = [
     nativeDeps: true,
     reloadNote: "Live terminal seats reconnect via resume-on-reattach after reload.",
   },
+  {
+    id: "plugin-depot",
+    name: "Plugin Depot",
+    repo: "matzek-systems/plugin-depot",
+    assets: ["main.js", "manifest.json", "styles.css"],
+  },
+  {
+    id: "vault-toolkit",
+    name: "Vault Toolkit",
+    repo: "matzek-systems/vault-toolkit",
+    assets: ["main.js", "manifest.json", "styles.css"],
+  },
+  {
+    id: "vault-dashboard",
+    name: "Vault Dashboard",
+    repo: "matzek-systems/vault-dashboard",
+    assets: ["main.js", "manifest.json", "styles.css"],
+  },
+  {
+    id: "vault-search-indexer",
+    name: "Vault Search Indexer",
+    repo: "matzek-systems/vault-search-indexer",
+    assets: ["main.js", "manifest.json", "styles.css"],
+  },
 ];
 
 const GH_FALLBACK = "C:\\Program Files\\GitHub CLI\\gh.exe";
@@ -145,6 +169,11 @@ class PluginDepotView extends ItemView {
       };
       this.state.set(entry.id, st);
       this.render();
+      if (!entry.repo) {
+        st.phase = "nochannel";
+        this.render();
+        continue;
+      }
       try {
         const out = await gh([
           "api",
@@ -155,12 +184,14 @@ class PluginDepotView extends ItemView {
         st.latest = out.replace(/^v/, "");
         st.phase = "idle";
       } catch (e) {
-        st.phase = "error";
-        st.error = /Not Found|404/.test(e.message)
-          ? "no releases"
-          : /auth|credentials|login/i.test(e.message)
+        if (/Not Found|404/.test(e.message)) {
+          st.phase = "nochannel";
+        } else {
+          st.phase = "error";
+          st.error = /auth|credentials|login/i.test(e.message)
             ? "gh not authenticated"
             : e.message.slice(0, 120) || "check failed";
+        }
       }
       this.render();
     }
@@ -243,7 +274,12 @@ class PluginDepotView extends ItemView {
       const status = row.createDiv({ cls: "pd-status" });
       const actions = row.createDiv({ cls: "pd-actions" });
 
-      if (st.phase === "error") {
+      if (st.phase === "nochannel") {
+        status.createDiv({
+          cls: "pd-muted",
+          text: entry.repo ? "no release channel yet" : "local only",
+        });
+      } else if (st.phase === "error") {
         status.createDiv({ cls: "pd-error", text: st.error || "error" });
         const retry = actions.createEl("button", { text: "Retry" });
         retry.onclick = () => void this.refreshAll();
@@ -300,14 +336,15 @@ class PluginDepotPlugin extends Plugin {
   }
 
   async activateView() {
+    // Socketed-app behavior (matches the dashboard's Process Status view):
+    // open as a main-workspace tab, reveal the existing one if already open.
     const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE);
     if (existing.length) {
       this.app.workspace.revealLeaf(existing[0]);
       return;
     }
-    const leaf = this.app.workspace.getRightLeaf(false);
+    const leaf = this.app.workspace.getLeaf("tab");
     await leaf.setViewState({ type: VIEW_TYPE, active: true });
-    this.app.workspace.revealLeaf(leaf);
   }
 
   onunload() {}
