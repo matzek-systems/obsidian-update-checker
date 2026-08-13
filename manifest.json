@@ -1,9 +1,9 @@
 {
-  "id": "plugin-depot",
-  "name": "Plugin Depot",
-  "version": "0.1.2",
+  "id": "update-checker",
+  "name": "Update Checker",
+  "version": "0.2.0",
   "minAppVersion": "1.5.0",
-  "description": "Dashboard for plugins distributed outside the marketplace: installed vs latest GitHub release per plugin, one-button update via the GitHub CLI.",
+  "description": "Dashboard for plugins distributed outside the marketplace: installed vs latest GitHub release, baseline-verified modification detection, one-button update via the GitHub CLI.",
   "author": "Matzek Systems",
   "isDesktopOnly": true
 }

@@ -1,15 +1,15 @@
-.plugin-depot .pd-header {
+.update-checker .uc-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.plugin-depot .pd-header h3 {
+.update-checker .uc-header h3 {
   margin: 0;
 }
 
-.plugin-depot .pd-row {
+.update-checker .uc-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -18,55 +18,65 @@
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.plugin-depot .pd-info {
+.update-checker .uc-info {
   flex: 1 1 160px;
   min-width: 140px;
 }
 
-.plugin-depot .pd-name {
+.update-checker .uc-name {
   font-weight: 600;
 }
 
-.plugin-depot .pd-repo {
+.update-checker .uc-repo {
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
 }
 
-.plugin-depot .pd-versions {
+.update-checker .uc-versions {
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
   flex: 0 0 auto;
 }
 
-.plugin-depot .pd-status {
+.update-checker .uc-status {
   flex: 0 0 auto;
   font-size: var(--font-ui-smaller);
 }
 
-.plugin-depot .pd-ok {
+.update-checker .uc-ok {
   color: var(--color-green);
 }
 
-.plugin-depot .pd-update {
+.update-checker .uc-update {
   color: var(--color-orange);
   font-weight: 600;
 }
 
-.plugin-depot .pd-error {
+.update-checker .uc-ahead {
+  color: var(--color-blue);
+  font-weight: 600;
+}
+
+.update-checker .uc-modified {
+  color: var(--color-yellow);
+  font-weight: 600;
+}
+
+.update-checker .uc-error {
   color: var(--color-red);
 }
 
-.plugin-depot .pd-muted {
+.update-checker .uc-muted {
   color: var(--text-faint);
 }
 
-.plugin-depot .pd-note {
+.update-checker .uc-note {
   flex-basis: 100%;
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
 }
 
-.plugin-depot .pd-foot {
+.update-checker .uc-foot {
   margin-top: 12px;
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
