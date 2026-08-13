@@ -1,9 +1,22 @@
-/* Matzek Hub — dashboard + updater for Matzek Systems Obsidian plugins.
+/* Plugin Depot — dashboard + updater for Obsidian plugins distributed via
+ * GitHub releases (outside the community marketplace).
  *
  * Plain CommonJS on purpose: no build step, so the plugin's own release
- * assets are these exact source files. Auth rides the GitHub CLI (`gh`),
- * which every seat already has authenticated for org repo access — no
- * token storage in the plugin.
+ * assets are these exact source files. Auth rides the GitHub CLI (`gh`) —
+ * the depot never stores or handles tokens itself.
+ *
+ * Security posture (see SECURITY.md before changing any of this):
+ *  - execFile only, never a shell — no argv string is interpolated.
+ *  - No remote-controlled string is ever passed to a command. The only
+ *    remote field consumed is the release tag_name, and it is only
+ *    version-compared and rendered.
+ *  - All rendering is text-node only (createEl/createDiv with text).
+ *    Never innerHTML. Remote text (tag names, gh error output) is
+ *    untrusted — including as prompt-injection payloads for any LLM that
+ *    reads this UI or its logs.
+ *  - Release notes / repo descriptions / issues / comments are deliberately
+ *    NOT fetched. Adding them means adding an untrusted-content surface;
+ *    don't, without updating SECURITY.md.
  */
 
 const { ItemView, Plugin, Notice } = require("obsidian");
@@ -11,13 +24,20 @@ const { execFile } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const VIEW_TYPE = "matzek-hub";
+const VIEW_TYPE = "plugin-depot";
 
-/* One entry per distributed plugin. `assets` are the release asset names
- * pulled on update. `nativeDeps: true` = the plugin dir needs runtime
- * pieces (node_modules) a release does NOT carry — fresh installs of those
- * need a separate setup pass; updates are safe (assets only). */
-const REGISTRY = [
+/* Default registry — seed entries for this deployment. Overridden by a
+ * `registry` array in the plugin's data.json (Settings storage), which is
+ * how an open-source install configures its own list. Fields:
+ *   id         plugin folder id under .obsidian/plugins/
+ *   name       display name
+ *   repo       owner/repo carrying GitHub releases
+ *   assets     release asset filenames pulled on update
+ *   nativeDeps true = plugin dir needs runtime pieces (node_modules) a
+ *              release does not carry; fresh installs need separate setup
+ *   reloadNote shown after an update downloads, before the user reloads
+ */
+const DEFAULT_REGISTRY = [
   {
     id: "workspace-shell",
     name: "Workspace Shell",
@@ -65,7 +85,7 @@ function semverLt(a, b) {
   return false;
 }
 
-class MatzekHubView extends ItemView {
+class PluginDepotView extends ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -78,11 +98,15 @@ class MatzekHubView extends ItemView {
   }
 
   getDisplayText() {
-    return "Matzek Hub";
+    return "Plugin Depot";
   }
 
   getIcon() {
     return "layout-grid";
+  }
+
+  registry() {
+    return this.plugin.settings.registry;
   }
 
   vaultBase() {
@@ -106,13 +130,13 @@ class MatzekHubView extends ItemView {
   }
 
   async onOpen() {
-    this.contentEl.addClass("matzek-hub");
+    this.contentEl.addClass("plugin-depot");
     this.render();
     await this.refreshAll();
   }
 
   async refreshAll() {
-    for (const entry of REGISTRY) {
+    for (const entry of this.registry()) {
       const st = {
         installed: this.installedVersion(entry.id),
         latest: null,
@@ -166,7 +190,7 @@ class MatzekHubView extends ItemView {
 
   async reload(entry) {
     if (entry.id === this.plugin.manifest.id) {
-      new Notice("The hub can't reload itself — toggle it in Community plugins or restart Obsidian.");
+      new Notice("The depot can't reload itself — toggle it in Community plugins or restart Obsidian.");
       return;
     }
     const plugins = this.app.plugins;
@@ -186,26 +210,26 @@ class MatzekHubView extends ItemView {
     const el = this.contentEl;
     el.empty();
 
-    const header = el.createDiv({ cls: "mh-header" });
-    header.createEl("h3", { text: "Matzek Systems plugins" });
+    const header = el.createDiv({ cls: "pd-header" });
+    header.createEl("h3", { text: "Managed plugins" });
     const refreshBtn = header.createEl("button", { text: "Refresh" });
     refreshBtn.onclick = () => void this.refreshAll();
 
-    const table = el.createDiv({ cls: "mh-table" });
-    for (const entry of REGISTRY) {
+    const table = el.createDiv({ cls: "pd-table" });
+    for (const entry of this.registry()) {
       const st = this.state.get(entry.id) || {
         installed: this.installedVersion(entry.id),
         latest: null,
         phase: "idle",
         error: null,
       };
-      const row = table.createDiv({ cls: "mh-row" });
+      const row = table.createDiv({ cls: "pd-row" });
 
-      const info = row.createDiv({ cls: "mh-info" });
-      info.createDiv({ cls: "mh-name", text: entry.name });
-      info.createDiv({ cls: "mh-repo", text: entry.repo });
+      const info = row.createDiv({ cls: "pd-info" });
+      info.createDiv({ cls: "pd-name", text: entry.name });
+      info.createDiv({ cls: "pd-repo", text: entry.repo });
 
-      const ver = row.createDiv({ cls: "mh-versions" });
+      const ver = row.createDiv({ cls: "pd-versions" });
       ver.createDiv({
         text: `installed: ${st.installed || "not installed"}`,
       });
@@ -216,54 +240,61 @@ class MatzekHubView extends ItemView {
             : `latest: ${st.latest || "?"}`,
       });
 
-      const status = row.createDiv({ cls: "mh-status" });
-      const actions = row.createDiv({ cls: "mh-actions" });
+      const status = row.createDiv({ cls: "pd-status" });
+      const actions = row.createDiv({ cls: "pd-actions" });
 
       if (st.phase === "error") {
-        status.createDiv({ cls: "mh-error", text: st.error || "error" });
+        status.createDiv({ cls: "pd-error", text: st.error || "error" });
         const retry = actions.createEl("button", { text: "Retry" });
         retry.onclick = () => void this.refreshAll();
       } else if (st.phase === "updating") {
         status.createDiv({ text: "downloading…" });
       } else if (st.phase === "updated") {
-        status.createDiv({ cls: "mh-ok", text: "downloaded — reload to activate" });
+        status.createDiv({ cls: "pd-ok", text: "downloaded — reload to activate" });
         const rb = actions.createEl("button", { cls: "mod-cta", text: "Reload plugin" });
         rb.onclick = () => void this.reload(entry);
-        if (entry.reloadNote) row.createDiv({ cls: "mh-note", text: entry.reloadNote });
+        if (entry.reloadNote) row.createDiv({ cls: "pd-note", text: entry.reloadNote });
       } else if (st.latest && !st.installed) {
         status.createDiv({ text: "not installed" });
         const ib = actions.createEl("button", { text: "Install files" });
         ib.onclick = () => void this.update(entry);
         if (entry.nativeDeps)
           row.createDiv({
-            cls: "mh-note",
+            cls: "pd-note",
             text: "Needs one-time native runtime setup beyond these files — see the repo README.",
           });
       } else if (st.latest && st.installed && semverLt(st.installed, st.latest)) {
-        status.createDiv({ cls: "mh-update", text: "update available" });
+        status.createDiv({ cls: "pd-update", text: "update available" });
         const ub = actions.createEl("button", { cls: "mod-cta", text: "Update" });
         ub.onclick = () => void this.update(entry);
       } else if (st.latest) {
-        status.createDiv({ cls: "mh-ok", text: "up to date" });
+        status.createDiv({ cls: "pd-ok", text: "up to date" });
       }
     }
 
     el.createDiv({
-      cls: "mh-foot",
+      cls: "pd-foot",
       text: "Updates download release assets via the GitHub CLI (gh). Auth = your gh login.",
     });
   }
 }
 
-class MatzekHubPlugin extends Plugin {
-  async onload() {
-    this.registerView(VIEW_TYPE, (leaf) => new MatzekHubView(leaf, this));
+const DEFAULT_SETTINGS = {
+  registry: DEFAULT_REGISTRY,
+};
 
-    this.addRibbonIcon("layout-grid", "Open Matzek Hub", () => void this.activateView());
+class PluginDepotPlugin extends Plugin {
+  async onload() {
+    const saved = (await this.loadData()) || {};
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, saved);
+
+    this.registerView(VIEW_TYPE, (leaf) => new PluginDepotView(leaf, this));
+
+    this.addRibbonIcon("layout-grid", "Open Plugin Depot", () => void this.activateView());
 
     this.addCommand({
       id: "open",
-      name: "Open Matzek Hub",
+      name: "Open Plugin Depot",
       callback: () => void this.activateView(),
     });
   }
@@ -282,5 +313,5 @@ class MatzekHubPlugin extends Plugin {
   onunload() {}
 }
 
-module.exports = MatzekHubPlugin;
-module.exports.default = MatzekHubPlugin;
+module.exports = PluginDepotPlugin;
+module.exports.default = PluginDepotPlugin;

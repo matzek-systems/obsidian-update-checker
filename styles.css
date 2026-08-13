@@ -1,15 +1,15 @@
-.matzek-hub .mh-header {
+.plugin-depot .pd-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
 
-.matzek-hub .mh-header h3 {
+.plugin-depot .pd-header h3 {
   margin: 0;
 }
 
-.matzek-hub .mh-row {
+.plugin-depot .pd-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -18,51 +18,51 @@
   border-top: 1px solid var(--background-modifier-border);
 }
 
-.matzek-hub .mh-info {
+.plugin-depot .pd-info {
   flex: 1 1 160px;
   min-width: 140px;
 }
 
-.matzek-hub .mh-name {
+.plugin-depot .pd-name {
   font-weight: 600;
 }
 
-.matzek-hub .mh-repo {
+.plugin-depot .pd-repo {
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
 }
 
-.matzek-hub .mh-versions {
+.plugin-depot .pd-versions {
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
   flex: 0 0 auto;
 }
 
-.matzek-hub .mh-status {
+.plugin-depot .pd-status {
   flex: 0 0 auto;
   font-size: var(--font-ui-smaller);
 }
 
-.matzek-hub .mh-ok {
+.plugin-depot .pd-ok {
   color: var(--color-green);
 }
 
-.matzek-hub .mh-update {
+.plugin-depot .pd-update {
   color: var(--color-orange);
   font-weight: 600;
 }
 
-.matzek-hub .mh-error {
+.plugin-depot .pd-error {
   color: var(--color-red);
 }
 
-.matzek-hub .mh-note {
+.plugin-depot .pd-note {
   flex-basis: 100%;
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
 }
 
-.matzek-hub .mh-foot {
+.plugin-depot .pd-foot {
   margin-top: 12px;
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
