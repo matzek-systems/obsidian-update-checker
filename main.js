@@ -49,7 +49,7 @@ const DEFAULT_REGISTRY = [
   {
     id: "workspace-shell",
     name: "Workspace Shell",
-    repo: "matzek-systems/workspace-shell",
+    repo: "matzek-systems/obsidian-workspace-shell",
     assets: ["main.js", "manifest.json", "styles.css"],
     nativeDeps: true,
     reloadNote: "Live terminal seats reconnect via resume-on-reattach after reload.",
@@ -57,28 +57,38 @@ const DEFAULT_REGISTRY = [
   {
     id: "update-checker",
     name: "Update Checker",
-    repo: "matzek-systems/update-checker",
+    repo: "matzek-systems/obsidian-update-checker",
     assets: ["main.js", "manifest.json", "styles.css"],
   },
   {
     id: "vault-toolkit",
     name: "Vault Toolkit",
-    repo: "matzek-systems/vault-toolkit",
+    repo: "matzek-systems/obsidian-vault-toolkit",
     assets: ["main.js", "manifest.json", "styles.css"],
   },
   {
     id: "vault-dashboard",
     name: "Vault Dashboard",
-    repo: "matzek-systems/vault-dashboard",
+    repo: "matzek-systems/obsidian-vault-dashboard",
     assets: ["main.js", "manifest.json", "styles.css"],
   },
   {
     id: "vault-search-indexer",
     name: "Vault Search Indexer",
-    repo: "matzek-systems/vault-search-indexer",
+    repo: "matzek-systems/obsidian-vault-search-indexer",
     assets: ["main.js", "manifest.json", "styles.css"],
   },
 ];
+
+/* Old repo names that GitHub redirects. A rename can move a redirect onto a
+ * parked repo, so any saved registry entry naming one is rewritten at load. */
+const REPO_ALIASES = {
+  "matzek-systems/workspace-shell": "matzek-systems/obsidian-workspace-shell",
+  "matzek-systems/update-checker": "matzek-systems/obsidian-update-checker",
+  "matzek-systems/vault-toolkit": "matzek-systems/obsidian-vault-toolkit",
+  "matzek-systems/vault-dashboard": "matzek-systems/obsidian-vault-dashboard",
+  "matzek-systems/vault-search-indexer": "matzek-systems/obsidian-vault-search-indexer",
+};
 
 const DEFAULT_SETTINGS = {
   registry: DEFAULT_REGISTRY,
@@ -425,6 +435,9 @@ class UpdateCheckerPlugin extends Plugin {
   async onload() {
     const saved = (await this.loadData()) || {};
     this.settings = Object.assign({}, DEFAULT_SETTINGS, saved);
+    this.settings.registry = this.settings.registry.map((e) =>
+      e && REPO_ALIASES[e.repo] ? Object.assign({}, e, { repo: REPO_ALIASES[e.repo] }) : e
+    );
 
     this.registerView(VIEW_TYPE, (leaf) => new UpdateCheckerView(leaf, this));
 
